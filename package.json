@@ -1,0 +1,25 @@
+{
+  "name": "hue-http",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tcooi/hue-http.git"
+  },
+  "author": "tcooi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tcooi/hue-http/issues"
+  },
+  "homepage": "https://github.com/tcooi/hue-http#readme",
+  "dependencies": {
+    "body-parser": "^1.16.0",
+    "express": "^4.14.1",
+    "node-hue-api": "^2.4.1"
+  }
+}
