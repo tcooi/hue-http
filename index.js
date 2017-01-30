@@ -76,7 +76,7 @@ router.route('/:lamp_id/brightness_set/:value')
     brightnessSet(req.params.lamp_id, req.params.value);
     res.json({});
   });
-app.use('/hue', router);
+app.use('/', router);
 
 app.listen(port);
 console.log('listening to port ' + port);
