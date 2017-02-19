@@ -17,7 +17,7 @@ var port = process.env.PORT || 8020;
 var router = express.Router();
 
 router.get('/', function(req, res) {
-  res.send('hello');
+  res.send('state,[lamp_id]/on,[lamp_id]/off');
 });
 
 //get state of all lights
@@ -48,9 +48,9 @@ router.route('/:lamp_id/off')
 
 //if specified light is on = turn off
 //if specified light is off = turn on
-router.route('/:lamp_id/s')
+router.route('/:lamp_id/toggle')
   .get(function(req, res) {
-    s(req.params.lamp_id);
+    toggle(req.params.lamp_id);
     res.json({msg: 'lamp'});
   });
 
@@ -81,8 +81,8 @@ app.use('/', router);
 app.listen(port);
 console.log('listening to port ' + port);
 
-var host = config.ip,
-    username = config.username,
+var host = settings.ip,
+    username = settings.username,
     api = new HueApi(host, username),
     state = lightState.create();
 
@@ -130,7 +130,7 @@ var off = function(lampId) {
       .done();
 };
 
-var s = function(lampId) {
+var toggle = function(lampId) {
   api.lights(function(err, lights) {
     if(err) throw err;
     if(lights.lights[0].state.on === true) {
@@ -160,9 +160,4 @@ var brightnessSet = function(lampId, value) {
       .then(displayResult)
       .fail(displayError)
       .done();
-};
-
-var onOff = function(lampId) {
-//if on, turn off
-//if off, turn on
 };
