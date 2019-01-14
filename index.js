@@ -1,57 +1,171 @@
-var fs = require('fs');
-var config = require('./config.json');
+const fs = require('fs');
+const config = require('./config.json');
 
-var express = require('express');
-var bodyParser = require('body-parser');
-var app = express();
+const express = require('express');
+const bodyParser = require('body-parser');
+let app = express();
 
-var hue = require("node-hue-api");
-var HueApi = hue.HueApi;
-var lightState = hue.lightState;
+let hue = require("node-hue-api");
+let HueApi = hue.HueApi;
+let lightState = hue.lightState;
 
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
 
-var port = process.env.PORT || 8020;
+let port = process.env.PORT || 8020;
 
-var router = express.Router();
+let router = express.Router();
 
-router.get('/', function(req, res) {
-  res.send('state,[lamp_id]/on,[lamp_id]/off');
-});
+let host = config.ip,
+    username = config.username,
+    api = new HueApi(host, username),
+    state = lightState.create();
+
+let displayResult = function(result) {
+    console.log(result);
+};
+
+let displayError = function(err) {
+    console.error(err);
+};
+
+let displayJSON = function(result) {
+    console.log(JSON.stringify(result, null, 2));
+};
+
+let saveJSON = function(result) {
+  fs.writeFile('hueData.json', JSON.stringify(result, null, 2), 'utf8');
+};
+
+let serveJSON = function(cb) {
+  fs.readFile('hueData.json', function(err, data) {
+    cb(err, data);
+  });
+};
+
+let getLights = function() {
+  api.lights(function(err, lights) {
+      if (err) throw err;
+      displayJSON(lights);
+      saveJSON(lights);
+  });
+};
+
+// let on = function(lampId) {
+//   api.setLightState(lampId, state.on())
+//       .then(displayResult)
+//       .fail(displayError)
+//       .done();
+// };
+
+// let off = function(lampId) {
+//   api.setLightState(lampId, state.off())
+//       .then(displayResult)
+//       .fail(displayError)
+//       .done();
+// };
+
+let temperatureSet = function(lampId, value) {
+  api.setLightState(lampId, state.ct(value))
+      .then(displayResult)
+      .fail(displayError)
+      .done();
+};
+
+let brightnessInc = function(lampId, value) {
+  api.setLightState(lampId, state.bri_inc(value))
+      .then(displayResult)
+      .fail(displayError)
+      .done();
+};
+
+let brightnessSet = function(lampId, value) {
+  api.setLightState(lampId, state.brightness(value))
+      .then(displayResult)
+      .fail(displayError)
+      .done();
+};
 
 //get state of all lights
-router.route('/state')
-  .get(function(req, res) {
-    getLights();
-    // res.json({msg: 'hi'});
-    serveJSON(function(err, data) {
-      res.writeHead(200, {'Content-Type' : 'application/json'});
-      res.end(data);
-      return;
+// router.route('/state')
+//   .get(function(req, res) {
+//     getLights();
+//     serveJSON(function(err, data) {
+//       res.writeHead(200, {'Content-Type' : 'application/json'});
+//       res.end(data);
+//       return;
+//     });
+//   });
+
+//get state of all lights
+router.route('/lights')
+  .get((req, res) => {
+    api.lights((err, data) => {
+      if(err) throw err;
+      console.log(data);
+      let lights = data;
+      res.json(lights)
     });
   });
 
-//turn on specified light
-router.route('/:lamp_id/on')
-  .get(function(req, res) {
-    on(req.params.lamp_id);
-    res.json({msg : 'lamp ' + req.params.lamp_id + ' on'});
+//get all groups
+router.route('/groups')
+  .get((req, res) => {
+    api.groups((err, data) => {
+      if(err) throw err;
+      console.log(data);
+      let groups = data;
+      res.json(groups)
+    });
   });
 
-//turn off specified light
-router.route('/:lamp_id/off')
-  .get(function(req, res) {
-    off(req.params.lamp_id);
-    res.json({msg : 'lamp ' + req.params.lamp_id + ' off'});
+//get specific light state
+router.route('/:lampId/state')
+  .get((req, res) => {
+    api.lights((err, data) => {
+      if(err) throw err;
+      let lights = data.lights.filter(light => light.id === req.params.lampId);
+      console.log('get light state');
+      res.json(lights)
+    });
   });
 
-//if specified light is on = turn off
-//if specified light is off = turn on
-router.route('/:lamp_id/toggle')
-  .get(function(req, res) {
-    toggle(req.params.lamp_id);
-    res.json({msg: 'lamp'});
+//turn on specific light
+router.route('/:lampId/on')
+  .get((req, res) => {
+    api.setLightState(req.params.lampId, state.on())
+      .then(console.log(`lamp ${req.params.lampId} turned on`))
+      .done();
+      res.json({msg: `lamp ${req.params.lampId} turned on`});
+  });
+
+//turn off specific light
+router.route('/:lampId/off')
+  .get((req, res) => {
+    api.setLightState(req.params.lampId, state.off())
+      .then(console.log(`lamp ${req.params.lampId} turned off`))
+      .done();
+      res.json({msg: `lamp ${req.params.lampId} turned off`})
+  });
+
+//toggle specific light
+router.route('/:lampId/toggle')
+  .get((req, res) => {
+    api.lights((err, data) => {
+      let lampId = req.params.lampId
+      if(err) throw err;
+      let light = data.lights.filter(light => light.id === lampId);
+      if(light[0].state.on) {
+        api.setLightState(lampId, state.off())
+          .then(console.log('turned off'))
+          .done()
+      } else {
+        api.setLightState(lampId, state.on())
+          .then(console.log('turned on'))
+          .done()
+      }
+      res.json(light[0].state.on)
+    })
   });
 
 //increase or decrease brightness
@@ -60,13 +174,7 @@ router.route('/:lamp_id/toggle')
 router.route('/:lamp_id/brightness_inc/:value')
   .get(function(req, res) {
     brightnessInc(req.params.lamp_id, req.params.value);
-    res.json({});
-  });
-
-router.route('/:lamp_id/temperature/:value')
-  .get(function(req, res) {
-    temperatureSet(req.params.lamp_id, req.params.value);
-    res.json({});
+    res.json({msg: `${req.params.value}`});
   });
 
 //set brightness
@@ -76,88 +184,21 @@ router.route('/:lamp_id/brightness_set/:value')
     brightnessSet(req.params.lamp_id, req.params.value);
     res.json({});
   });
+
+//kelvin incremental
+router.route('/:lamp_id/temperature/:value')
+  .get(function(req, res) {
+    temperatureSet(req.params.lamp_id, req.params.value);
+    res.json({});
+  });
+
+
+//kelvin set
+
+
+
+
 app.use('/', router);
 
 app.listen(port);
 console.log('listening to port ' + port);
-
-var host = settings.ip,
-    username = settings.username,
-    api = new HueApi(host, username),
-    state = lightState.create();
-
-var displayResult = function(result) {
-    console.log(result);
-};
-
-var displayError = function(err) {
-    console.error(err);
-};
-
-var displayJSON = function(result) {
-    console.log(JSON.stringify(result, null, 2));
-};
-
-var saveJSON = function(result) {
-  fs.writeFile('hueData.json', JSON.stringify(result, null, 2), 'utf8');
-};
-
-var serveJSON = function(cb) {
-  fs.readFile('hueData.json', function(err, data) {
-    cb(err, data);
-  });
-};
-
-var getLights = function() {
-  api.lights(function(err, lights) {
-      if (err) throw err;
-      displayJSON(lights);
-      saveJSON(lights);
-  });
-};
-
-var on = function(lampId) {
-  api.setLightState(lampId, state.on())
-      .then(displayResult)
-      .fail(displayError)
-      .done();
-};
-
-var off = function(lampId) {
-  api.setLightState(lampId, state.off())
-      .then(displayResult)
-      .fail(displayError)
-      .done();
-};
-
-var toggle = function(lampId) {
-  api.lights(function(err, lights) {
-    if(err) throw err;
-    if(lights.lights[0].state.on === true) {
-      off(lampId);
-    }else {
-      on(lampId);
-    }
-  });
-};
-
-var temperatureSet = function(lampId, value) {
-  api.setLightState(lampId, state.ct(value))
-      .then(displayResult)
-      .fail(displayError)
-      .done();
-};
-
-var brightnessInc = function(lampId, value) {
-  api.setLightState(lampId, state.bri_inc(value))
-      .then(displayResult)
-      .fail(displayError)
-      .done();
-};
-
-var brightnessSet = function(lampId, value) {
-  api.setLightState(lampId, state.brightness(value))
-      .then(displayResult)
-      .fail(displayError)
-      .done();
-};
