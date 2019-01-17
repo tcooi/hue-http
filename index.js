@@ -59,13 +59,6 @@ let temperatureSet = function(lampId, value) {
       .done();
 };
 
-let brightnessInc = function(lampId, value) {
-  api.setLightState(lampId, state.bri_inc(value))
-      .then(displayResult)
-      .fail(displayError)
-      .done();
-};
-
 //get state of all lights
 // router.route('/state')
 //   .get(function(req, res) {
@@ -105,7 +98,7 @@ router.route('/light/:lampId/state')
     api.lights((err, data) => {
       if(err) throw err;
       let lights = data.lights.filter(light => light.id === req.params.lampId);
-      console.log('get light state');
+      console.log(`get light ${req.params.lampId} state`);
       res.json(lights)
     });
   });
@@ -198,29 +191,17 @@ router.route('/group/:groupId/off')
 
 //group incremental brightness
 
-//increase or decrease brightness
-//range 0 to 254
-//accepts values -254 to 254
-router.route('/:lamp_id/brightness_inc/:value')
-  .get(function(req, res) {
-    brightnessInc(req.params.lamp_id, req.params.value);
-    res.json({msg: `${req.params.value}`});
-  });
-
-//set brightness
-//range 0% to 100%
-
-
-
-router.route('/:lampId/brightness_set2/:value')
+//get specific group state with groupname
+router.route('/groupname/:groupName/state')
   .get((req, res) => {
-    api.setLightState(req.params.lampId, state.brightness(req.params.value))
-    .then(console.log("test"))
-    res.json({s: "e"})
+    api.groups((err, data) => {
+      if(err) throw err;
+      let groups = data.filter(group => group.name === req.params.groupName);
+      console.log(`get group ${req.params.groupName} state `);
+      res.json(groups);
+    });
   });
 
-//get kelvin
-//todo
 
 //kelvin incremental
 router.route('/:lamp_id/temperature/:value')
@@ -231,7 +212,7 @@ router.route('/:lamp_id/temperature/:value')
 
 
 //kelvin set
-//todo
+
 
 //get scene
 //todo
