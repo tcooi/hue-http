@@ -51,19 +51,6 @@ let getLights = function() {
   });
 };
 
-// let on = function(lampId) {
-//   api.setLightState(lampId, state.on())
-//       .then(displayResult)
-//       .fail(displayError)
-//       .done();
-// };
-
-// let off = function(lampId) {
-//   api.setLightState(lampId, state.off())
-//       .then(displayResult)
-//       .fail(displayError)
-//       .done();
-// };
 
 let temperatureSet = function(lampId, value) {
   api.setLightState(lampId, state.ct(value))
@@ -120,7 +107,7 @@ router.route('/groups')
   });
 
 //get specific light state
-router.route('/:lampId/state')
+router.route('/light/:lampId/state')
   .get((req, res) => {
     api.lights((err, data) => {
       if(err) throw err;
@@ -131,7 +118,7 @@ router.route('/:lampId/state')
   });
 
 //turn on specific light
-router.route('/:lampId/on')
+router.route('/light/:lampId/on')
   .get((req, res) => {
     api.setLightState(req.params.lampId, state.on())
       .then(console.log(`lamp ${req.params.lampId} turned on`))
@@ -140,7 +127,7 @@ router.route('/:lampId/on')
   });
 
 //turn off specific light
-router.route('/:lampId/off')
+router.route('/light/:lampId/off')
   .get((req, res) => {
     api.setLightState(req.params.lampId, state.off())
       .then(console.log(`lamp ${req.params.lampId} turned off`))
@@ -149,7 +136,7 @@ router.route('/:lampId/off')
   });
 
 //toggle specific light
-router.route('/:lampId/toggle')
+router.route('/light/:lampId/toggle')
   .get((req, res) => {
     api.lights((err, data) => {
       let lampId = req.params.lampId
@@ -165,8 +152,41 @@ router.route('/:lampId/toggle')
           .done()
       }
       res.json(light[0].state.on)
-    })
+    });
   });
+
+
+//get specific group state
+router.route('/group/:groupId/state')
+  .get((req, res) => {
+    api.groups((err, data) => {
+      if(err) throw err;
+      let groups = data.filter(group => group.id === req.params.groupId);
+      console.log('get group state');
+      res.json(groups)
+    });
+  });
+
+//turn on specific group
+router.route('/group/:groupId/on')
+  .get((req, res) => {
+    api.setGroupLightState(req.params.groupId, state.on())
+      .then(console.log(`group ${req.params.groupId} turned on`))
+      .done()
+      res.json({})
+  });
+
+//turn off specific groups
+router.route('/group/:groupId/off')
+  .get((req, res) => {
+    api.setGroupLightState(req.params.groupId, state.off())
+      .then(console.log(`group ${req.params.groupId} turned off`))
+      .done()
+      res.json({})
+  })
+
+//get brightness
+//todo
 
 //increase or decrease brightness
 //range 0 to 254
@@ -185,6 +205,17 @@ router.route('/:lamp_id/brightness_set/:value')
     res.json({});
   });
 
+
+router.route('/:lampId/brightness_set2/:value')
+  .get((req, res) => {
+    api.setLightState(req.params.lampId, state.brightness(req.params.value))
+    .then(console.log("test"))
+    res.json({s: "e"})
+  });
+
+//get kelvin
+//todo
+
 //kelvin incremental
 router.route('/:lamp_id/temperature/:value')
   .get(function(req, res) {
@@ -194,9 +225,22 @@ router.route('/:lamp_id/temperature/:value')
 
 
 //kelvin set
+//todo
 
+//get scene
+//todo
 
+//set scene
+//todo
 
+//get rgb
+//todo
+
+//rgb set
+//todo
+
+//color set
+//todo
 
 app.use('/', router);
 
