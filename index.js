@@ -66,13 +66,6 @@ let brightnessInc = function(lampId, value) {
       .done();
 };
 
-let brightnessSet = function(lampId, value) {
-  api.setLightState(lampId, state.brightness(value))
-      .then(displayResult)
-      .fail(displayError)
-      .done();
-};
-
 //get state of all lights
 // router.route('/state')
 //   .get(function(req, res) {
@@ -165,8 +158,14 @@ router.route('/light/:lampId/brightness/set/:value')
   });
 
 //light incremental brightness
+router.route('/light/:lampId/brightness/incremental/:value')
+  .get((req, res) => {
+    api.setLightState(req.params.lampId, state.bri_inc(req.params.value*2.54))
+    .then(console.log(`light ${req.params.lampId} brightness ${req.params.value*2.54} / ${req.params.value}%`))
+    .done();
+  });
 
-//get specific group state
+//get specific group state with group ID
 router.route('/group/:groupId/state')
   .get((req, res) => {
     api.groups((err, data) => {
@@ -177,7 +176,7 @@ router.route('/group/:groupId/state')
     });
   });
 
-//turn on specific group
+//turn on specific group with group ID
 router.route('/group/:groupId/on')
   .get((req, res) => {
     api.setGroupLightState(req.params.groupId, state.on())
@@ -186,7 +185,7 @@ router.route('/group/:groupId/on')
       res.json({})
   });
 
-//turn off specific groups
+//turn off specific groups with group ID
 router.route('/group/:groupId/off')
   .get((req, res) => {
     api.setGroupLightState(req.params.groupId, state.off())
