@@ -155,6 +155,16 @@ router.route('/light/:lampId/toggle')
     });
   });
 
+//light set brightness
+router.route('/light/:lampId/brightness/set/:value')
+  .get((req, res) => {
+    api.setLightState(req.params.lampId, state.brightness(req.params.value))
+    .then(console.log(`light ${req.params.lampId} brightness set to ${req.params.value}%`))
+    .done();
+    res.json({});
+  });
+
+//light incremental brightness
 
 //get specific group state
 router.route('/group/:groupId/state')
@@ -185,8 +195,9 @@ router.route('/group/:groupId/off')
       res.json({})
   })
 
-//get brightness
-//todo
+//group set brightness
+
+//group incremental brightness
 
 //increase or decrease brightness
 //range 0 to 254
@@ -199,11 +210,7 @@ router.route('/:lamp_id/brightness_inc/:value')
 
 //set brightness
 //range 0% to 100%
-router.route('/:lamp_id/brightness_set/:value')
-  .get(function(req, res) {
-    brightnessSet(req.params.lamp_id, req.params.value);
-    res.json({});
-  });
+
 
 
 router.route('/:lampId/brightness_set2/:value')
