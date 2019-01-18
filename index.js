@@ -58,9 +58,8 @@ router.route('/lights')
   .get((req, res) => {
     api.lights((err, data) => {
       if(err) throw err;
-      console.log(data);
-      let lights = data;
-      res.json(lights)
+      console.log('get state of lamps');
+      res.json(data);
     });
   });
 
@@ -69,82 +68,111 @@ router.route('/groups')
   .get((req, res) => {
     api.groups((err, data) => {
       if(err) throw err;
-      console.log(data);
-      let groups = data;
-      res.json(groups)
+      console.log('get state of groups');
+      res.json(data);
     });
   });
 
 //get state of light with Light ID
-router.route('/light/:lampId/state')
+router.route('/light/:lightId/state')
   .get((req, res) => {
+    let lightId = req.params.lightId;
     api.lights((err, data) => {
       if(err) throw err;
-      let light = data.lights.filter(light => light.id === req.params.lampId);
-      console.log(`get light ${req.params.lampId} state`);
-      res.json(light)
+      let light = data.lights.filter(light => light.id === lightId);
+      console.log(`get lamp ${lightId} state`);
+      res.json(light);
     });
   });
 
 //turn on light with light ID
-router.route('/light/:lampId/on')
+router.route('/light/:lightId/on')
   .get((req, res) => {
-    api.setLightState(req.params.lampId, state.on())
-      .then(console.log(`lamp ${req.params.lampId} turned on`))
-      .done();
-      res.json({msg: `lamp ${req.params.lampId} turned on`});
+    let lightId = req.params.lightId;
+    api.setLightState(lightId, state.on(), (err, data) => {
+      if(err) throw err;
+      console.log(`lamp ${lightId} turned on`);
+      api.lights((err, data) => {
+        if(err) throw err;
+        let light = data.lights.filter(light => light.id === lightId);
+        res.json({msg: `lamp ${lightId} turned on`, data: light});
+      });
+    });
   });
 
 //turn off light with light ID
-router.route('/light/:lampId/off')
+router.route('/light/:lightId/off')
   .get((req, res) => {
-    api.setLightState(req.params.lampId, state.off())
-      .then(console.log(`lamp ${req.params.lampId} turned off`))
-      .done();
-      res.json({msg: `lamp ${req.params.lampId} turned off`})
+    let lightId = req.params.lightId;
+    api.setLightState(lightId, state.off(), (err, data) => {
+      if(err) throw err;
+      console.log(`lamp ${lightId} turned off`);
+      api.lights((err, data) => {
+        if(err) throw err;
+        let light = data.lights.filter(light => light.id === lightId);
+        res.json({msg: `lamp ${lightId} turned off`, data: light});
+      });
+    });
   });
 
 //toggle light with light ID
-router.route('/light/:lampId/toggle')
+router.route('/light/:lightId/toggle')
   .get((req, res) => {
+    let lightId = req.params.lightId;
     api.lights((err, data) => {
-      let lampId = req.params.lampId
       if(err) throw err;
-      let light = data.lights.filter(light => light.id === lampId);
+      let light = data.lights.filter(light => light.id === lightId);
       if(light[0].state.on) {
-        api.setLightState(lampId, state.off())
-          .then(console.log('turned off'))
-          .done()
+        api.setLightState(lightId, state.off(), (err, data) => {
+          if(err) throw err;
+          console.log(`lamp ${lightId} turned off`);
+        });
       } else {
-        api.setLightState(lampId, state.on())
-          .then(console.log('turned on'))
-          .done()
+        api.setLightState(lightId, state.on(), (err, data) => {
+          if(err) throw err;
+          console.log(`lamp ${lightId} turned on`);
+        });
       }
-      res.json(light[0].state.on)
+      res.json(!light[0].state.on);
     });
   });
 
 //set light brightness with light ID
-router.route('/light/:lampId/brightness/set/:value')
+router.route('/light/:lightId/brightness/set/:value')
   .get((req, res) => {
-    api.setLightState(req.params.lampId, state.brightness(req.params.value))
-    .then(console.log(`light ${req.params.lampId} brightness set to ${req.params.value}%`))
-    .done();
-    res.json({});
+    let lightId = req.params.lightId;
+    let value = req.params.value;
+    api.setLightState(lightId, state.brightness(value), (err, data) => {
+      if(err) throw err;
+      console.log(`light ${lightId} brightness set to ${value}%`);
+      api.lights((err, data) => {
+        if(err) throw err;
+        let light = data.lights.filter(light => light.id === lightId);
+        res.json(light);
+      });
+    });
   });
 
 //incremental light brightness adjustment with light ID
-router.route('/light/:lampId/brightness/incremental/:value')
+router.route('/light/:lightId/brightness/incremental/:value')
   .get((req, res) => {
-    api.setLightState(req.params.lampId, state.bri_inc(req.params.value*2.54))
-    .then(console.log(`light ${req.params.lampId} brightness ${req.params.value*2.54} / ${req.params.value}%`))
-    .done();
+    let lightId = req.params.lightId;
+    let value = req.params.value;
+    api.setLightState(lightId, state.bri_inc(value*2.54), (err, data) => {
+      if(err) throw err;
+      console.log(`light ${lightId} brightness adjusted ${value}%`);
+      api.lights((err, data) => {
+        if(err) throw err;
+        let light = data.lights.filter(light => light.id === lightId);
+        res.json(light);
+      });
+    });
   });
 
 //set light temperature with light ID
-router.route('/light/:lampId/temperature/set/:value')
+router.route('/light/:lightId/temperature/set/:value')
   .get((req, res) => {
-    let lightId = req.params.lampId;
+    let lightId = req.params.lightId;
     let value = req.params.value;
     api.setLightState(lightId, state.ct(153+(value*3.47)), (err, data) => {
       if(err) throw err;
@@ -158,9 +186,9 @@ router.route('/light/:lampId/temperature/set/:value')
   });
 
 //incremental light temperature adjustment with light ID
-router.route('/light/:lampId/temperature/incremental/:value')
+router.route('/light/:lightId/temperature/incremental/:value')
   .get((req, res) => {
-    let lightId = req.params.lampId;
+    let lightId = req.params.lightId;
     let value = req.params.value;
     api.setLightState(lightId, state.ct_inc(value*3.47), (err, data) => {
       if(err) throw err;
