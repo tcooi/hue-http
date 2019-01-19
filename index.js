@@ -311,6 +311,20 @@ router.route('/group/:groupId/temperature/set/:value')
   });
 
 //incremental group temperature adjustment with group ID
+router.route('/group/:groupId/temperature/incremental/:value')
+  .get((req, res) => {
+    let groupId = req.params.groupId;
+    let value = req.params.value;
+    api.setGroupLightState(groupId, state.ct_inc(value*3.47), (err, data) => {
+      if(err) throw err;
+      console.log(`group ${groupId} temperature adjusted ${value}%`);
+      api.groups((err, data) => {
+        if(err) throw err;
+        let group = data.filter(group => group.id === groupId);
+        res.json(group);
+      });
+    });
+  });
 
 //get state of group with groupname
 router.route('/groupname/:groupName/state')
