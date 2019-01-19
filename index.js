@@ -215,22 +215,50 @@ router.route('/group/:groupId/state')
 //turn on group with group ID
 router.route('/group/:groupId/on')
   .get((req, res) => {
-    api.setGroupLightState(req.params.groupId, state.on())
-      .then(console.log(`group ${req.params.groupId} turned on`))
-      .done()
-      res.json({})
+    let groupId = req.params.groupId;
+    api.setGroupLightState(groupId, state.on(), (err, data) => {
+      console.log(`group ${groupId} turned on`);
+      api.groups((err, data) => {
+        if(err) throw err;
+        let group = data.filter(group => group.id === groupId);
+        res.json(group);
+      });
+    });
   });
 
 //turn off group with group ID
 router.route('/group/:groupId/off')
   .get((req, res) => {
-    api.setGroupLightState(req.params.groupId, state.off())
-      .then(console.log(`group ${req.params.groupId} turned off`))
-      .done()
-      res.json({})
-  })
+    let groupId = req.params.groupId;
+    api.setGroupLightState(groupId, state.off(), (err, data) => {
+      console.log(`group ${groupId} turned off`);
+      api.groups((err, data) => {
+        if(err) throw err;
+        let group = data.filter(group => group.id === groupId);
+        res.json(group);
+      })
+    });
+  });
 
 //toggle group with group ID
+router.route('/group/:groupId/toggle')
+  .get((req, res) => {
+    let groupId = req.params.groupId;
+    api.groups((err, data) => {
+      if(err) throw err;
+      let group = data.filter(group => group.id === groupId);
+      if(group[0].state.any_on) {
+        api.setGroupLightState(groupId, state.off(), (err, data) => {
+          console.log(`group ${groupId} turned off`);
+        });
+      } else {
+        api.setGroupLightState(groupId, state.on(), (err, data) => {
+          console.log(`group ${groupId} turned on`);
+        });
+      }
+      res.json(group);
+    });
+  });
 
 //set group brightness wiith group ID
 
@@ -243,10 +271,11 @@ router.route('/group/:groupId/off')
 //get state of group with groupname
 router.route('/groupname/:groupName/state')
   .get((req, res) => {
+    let groupName = req.params.groupName;
     api.groups((err, data) => {
       if(err) throw err;
-      let groups = data.filter(group => group.name === req.params.groupName);
-      console.log(`get group ${req.params.groupName} state `);
+      let groups = data.filter(group => group.name.toLowerCase() === groupName.toLowerCase());
+      console.log(`get group ${groupName} state `);
       res.json(groups);
     });
   });
