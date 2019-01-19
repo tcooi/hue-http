@@ -260,7 +260,20 @@ router.route('/group/:groupId/toggle')
     });
   });
 
-//set group brightness wiith group ID
+//set group brightness with group ID
+router.route('/group/:groupId/brightness/set/:value')
+  .get((req, res) => {
+    let groupId = req.params.groupId;
+    let value = req.params.value;
+    api.setGroupLightState(groupId, state.brightness(value), (err, data) => {
+      console.log(`group ${groupId} brightness set to ${value}%`);
+      api.groups((err, data) => {
+        if(err) throw err;
+        let group = data.filter(group => group.id === groupId);
+        res.json(group);
+      });
+    });
+  });
 
 //incremental group brightness with group ID
 
