@@ -249,10 +249,12 @@ router.route('/group/:groupId/toggle')
       let group = data.filter(group => group.id === groupId);
       if(group[0].state.any_on) {
         api.setGroupLightState(groupId, state.off(), (err, data) => {
+          if(err) throw err;
           console.log(`group ${groupId} turned off`);
         });
       } else {
         api.setGroupLightState(groupId, state.on(), (err, data) => {
+          if(err) throw err;
           console.log(`group ${groupId} turned on`);
         });
       }
@@ -266,6 +268,7 @@ router.route('/group/:groupId/brightness/set/:value')
     let groupId = req.params.groupId;
     let value = req.params.value;
     api.setGroupLightState(groupId, state.brightness(value), (err, data) => {
+      if(err) throw err;
       console.log(`group ${groupId} brightness set to ${value}%`);
       api.groups((err, data) => {
         if(err) throw err;
@@ -276,8 +279,36 @@ router.route('/group/:groupId/brightness/set/:value')
   });
 
 //incremental group brightness with group ID
+router.route('/group/:groupId/brightness/incremental/:value')
+  .get((req, res) => {
+    let groupId = req.params.groupId;
+    let value = req.params.value;
+    api.setGroupLightState(groupId, state.bri_inc(value*2.54), (err, data) => {
+      if(err) throw err;
+      console.log(`group ${groupId} brightness adjusted ${value}%`);
+      api.groups((err, data) => {
+        if(err) throw err;
+        let group = data.filter(group => group.id === groupId);
+        res.json(group);
+      });
+    });
+  });
 
 //set group temperature with group ID
+router.route('/group/:groupId/temperature/set/:value')
+  .get((req, res) => {
+    let groupId = req.params.groupId;
+    let value = req.params.value;
+    api.setGroupLightState(groupId, state.ct(153+(value*3.47)), (err, data) => {
+      if(err) throw err;
+      console.log(`group ${groupId} temperature set to ${value}%`);
+      api.groups((err, data) => {
+        if(err) throw err;
+        let group = data.filter(group => group.id === groupId);
+        res.json(group);
+      });
+    });
+  });
 
 //incremental group temperature adjustment with group ID
 
