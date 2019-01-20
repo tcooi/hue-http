@@ -81,7 +81,10 @@ router.route('/light/:lightId/state')
       if(err) throw err;
       let light = data.lights.filter(light => light.id === lightId);
       console.log(`get lamp ${lightId} state`);
-      res.json(light);
+      api.lightStatusWithRGB(lightId, (err, data) => {
+        if(err) {console.log(err)}
+        res.json({data: light, rgb: data.state.rgb});
+      })
     });
   });
 
@@ -333,7 +336,7 @@ router.route('/groupname/:groupName/state')
     api.groups((err, data) => {
       if(err) throw err;
       let groups = data.filter(group => group.name.toLowerCase() === groupName.toLowerCase());
-      console.log(`get group ${groupName} state `);
+      console.log(`get group ${groupName} state`);
       res.json(groups);
     });
   });
