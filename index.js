@@ -334,10 +334,21 @@ router.route('/groupname/:groupName/state')
   .get((req, res) => {
     let groupName = req.params.groupName;
     api.groups((err, data) => {
-      if(err) throw err;
-      let groups = data.filter(group => group.name.toLowerCase() === groupName.toLowerCase());
+      if(err) console.log(err);
+      let group = data.filter(group => group.name.toLowerCase() === groupName.toLowerCase());
+      let lights = group[0].lights;
       console.log(`get group ${groupName} state`);
-      res.json(groups);
+      //rewrite..
+      let rgbArray = [];
+      lights.forEach((light) => {
+        api.lightStatusWithRGB(light, (err, data) => {
+          if(err) {console.log(err)}
+          rgbArray.push(data.state.rgb);
+          if(rgbArray.length === lights.length) {
+            res.json({data: group, rgb: rgbArray});
+          };
+        });
+      });
     });
   });
 
