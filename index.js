@@ -353,8 +353,65 @@ router.route('/groupname/:groupName/state')
   });
 
 //turn on group with groupname
+router.route('/groupname/:groupName/on')
+  .get((req, res) => {
+    let groupName = req.params.groupName;
+    api.groups((err, data) => {
+      if(err) console.log(err);
+      let group = data.filter(group => group.name.toLowerCase() === groupName.toLowerCase());
+      let lights = group[0].lights;
+      console.log(`group ${groupName} turned on`);
+      //rewrite..
+      let rgbArray = [];
+      lights.forEach((light) => {
+        api.setLightState(light, state.on(), (err, data) => {
+          if(err) throw err;
+        })
+        api.lightStatusWithRGB(light, (err, data) => {
+          if(err) {console.log(err)}
+          console.log(data);
+          rgbArray.push(data.state.rgb);
+          if(rgbArray.length === lights.length) {
+            api.groups((err, data) => {
+              if(err) console.log(err);
+              group = data.filter(group => group.name.toLowerCase() === groupName.toLowerCase());
+              res.json({data: group, rgb: rgbArray});
+            });
+          };
+        });
+      });
+    });
+  });
 
 //turn off group with groupname
+router.route('/groupname/:groupName/off')
+  .get((req, res) => {
+    let groupName = req.params.groupName;
+    api.groups((err, data) => {
+      if(err) console.log(err);
+      let group = data.filter(group => group.name.toLowerCase() === groupName.toLowerCase());
+      let lights = group[0].lights;
+      console.log(`group ${groupName} turned on`);
+      //rewrite..
+      let rgbArray = [];
+      lights.forEach((light) => {
+        api.setLightState(light, state.off(), (err, data) => {
+          if(err) throw err;
+        })
+        api.lightStatusWithRGB(light, (err, data) => {
+          if(err) {console.log(err)};
+          rgbArray.push(data.state.rgb);
+          if(rgbArray.length === lights.length) {
+            api.groups((err, data) => {
+              if(err) console.log(err);
+              group = data.filter(group => group.name.toLowerCase() === groupName.toLowerCase());
+              res.json({data: group, rgb: rgbArray});
+            });
+          };
+        });
+      });
+    });
+  });
 
 //toggle group with groupname
 
