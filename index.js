@@ -413,9 +413,70 @@ router.route('/groupname/:groupName/off')
     });
   });
 
+router.route('/groupname/:groupName/toggle2')
+  .get((req, res) => {
+    let groupName = req.params.groupName;
+
+
+
+    api.groups((err, data) => {
+      if (err) console.log(err.stack);
+      let group = data.filter(group => group.name.toLowerCase() === groupName.toLowerCase());
+      let lights = group[0].lights;
+      console.log(group);
+      console.log(lights);
+
+      lights.forEach((lightId) => {
+
+      })
+    })
+  })
+
 //toggle group with groupname
+router.route('/groupname/:groupName/toggle')
+  .get((req, res) => {
+    let groupName = req.params.groupName;
+    api.groups((err, data) => {
+      if (err) console.log(err);
+      let group = data.filter(group => group.name.toLowerCase() === groupName.toLowerCase());
+      let lights = group[0].lights;
+      lights.forEach((lightId) => {
+        api.lights((err, data) => {
+          if (err) throw err;
+          let state = data.lights.filter((light) => light.id == lightId)
+          if (state[0].state.on) {
+            console.log('light is on');
+            api.setLightState(lightId, state.off(), (err, data) => {
+              if (err) console.log(err)
+              console.log(data);
+            })
+          } else {
+            console.log('light is off');
+            api.setLightState(lightId, state.on(), (err, data) => {
+              if (err) console.log(err)
+              console.log(data);
+            })
+          }
+        })
+        res.json({})
+      })
+    });
+  });
 
 //set group brightness with groupname
+router.route('/groupname/:groupName/brightness/set/:value')
+  .get((req, res) => {
+    let groupName = req.params.groupName;
+    let value = req.params.value;
+    api.groups((err, data) => {
+      if (err) console.log(err.stack);
+      let group = data.filter((group) => group.name.toLowerCase() === groupName.toLowerCase());
+      api.setGroupLightState(group[0].id, state.brightness(value), (err, data) => {
+        if (err) console.log(err.stack);
+        res.json({})
+      })
+    })
+  })
 
 //incremental group brightness adjustment with groupname
 
