@@ -391,7 +391,7 @@ router.route('/groupname/:groupName/off')
       if(err) console.log(err);
       let group = data.filter(group => group.name.toLowerCase() === groupName.toLowerCase());
       let lights = group[0].lights;
-      console.log(`group ${groupName} turned on`);
+      console.log(`group ${groupName} turned off`);
       //rewrite..
       let rgbArray = [];
       lights.forEach((light) => {
@@ -473,12 +473,27 @@ router.route('/groupname/:groupName/brightness/set/:value')
       let group = data.filter((group) => group.name.toLowerCase() === groupName.toLowerCase());
       api.setGroupLightState(group[0].id, state.brightness(value), (err, data) => {
         if (err) console.log(err.stack);
-        res.json({})
+        res.json({});
+        //todo
       })
     })
   })
 
 //incremental group brightness adjustment with groupname
+router.route('/groupname/:groupName/brightness/incremental/:value')
+  .get((req, res) => {
+    let groupName = req.params.groupName;
+    let value = req.params.value;
+    api.groups((err, data) => {
+      if (err) console.log(err.stack);
+      let group = data.filter((group) => group.name.toLowerCase() === groupName.toLowerCase());
+      api.setGroupLightState(group[0].id, state.bri_inc(value*2.54), (err, data) => {
+        if (err) console.log(err.stack);
+        res.json({});
+        //todo
+      })
+    })
+  })
 
 //set group temperature with groupname
 
