@@ -512,14 +512,25 @@ router.route('/groupname/:groupName/temperature/set/:value')
   })
 
 //incremental group temperature adjustment with groupname
-
+router.route('/groupname/:groupName/temperature/incremental/:value')
+  .get((req, res) => {
+    let groupName = req.params.groupName;
+    let value = req.params.value;
+    api.groups((err, data) => {
+      if (err) console.log(err.stack);
+      let group = data.filter((group) => group.name.toLowerCase() === groupName.toLowerCase());
+      api.setGroupLightState(group[0].id, state.ct_inc(value*3.47), (err, data) => {
+        if (err) console.log(err.stack);
+        res.json({});
+      })
+    })
+  })
 
 //get scenes
 //todo
 
 //set scene
 //todo
-
 
 //color set
 //todo
